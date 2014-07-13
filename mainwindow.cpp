@@ -46,5 +46,6 @@ void MainWindow::connectDB()
 void MainWindow::setupTreeModel()
 {
     ui->treeView->setModel(mainC->createTreeView());
+    connect(ui->treeView, SIGNAL(clicked(const QModelIndex  & index)), SLOT(TreeItemClick()));
     ui->treeView->show();
 }

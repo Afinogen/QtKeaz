@@ -46,7 +46,7 @@ void MainController::createTreeItem(TreeItem *parentItem, int parentId)
         {
             TreeItem *item = new TreeItem(QString(qry.value(4).toString()),parentItem);
             parentItem->appendChild(item);
-            //connect(parentItem, SIGNAL(clicked()), this, SLOT(TreeItemClick()));
+            //connect(parentItem, SIGNAL(clicked(const QModelIndex  & index)), this, SLOT(TreeItemClick()));
             createTreeItem(item,qry.value(0).toInt());
         }
     }
