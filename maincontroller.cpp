@@ -44,9 +44,8 @@ void MainController::createTreeItem(TreeItem *parentItem, int parentId)
         // строке
         while(qry.next())
         {
-            TreeItem *item = new TreeItem(QString(qry.value(4).toString()),parentItem);
+            TreeItem *item = new TreeItem(qry.value(0).toInt(),QString(qry.value(4).toString()),parentItem);
             parentItem->appendChild(item);
-            //connect(parentItem, SIGNAL(clicked(const QModelIndex  & index)), this, SLOT(TreeItemClick()));
             createTreeItem(item,qry.value(0).toInt());
         }
     }
@@ -55,9 +54,25 @@ void MainController::createTreeItem(TreeItem *parentItem, int parentId)
         qDebug() << qry.lastError();
     }
 }
-void MainController::TreeItemClick()
+void MainController::TreeItemClick(const QModelIndex  &index)
 {
-    qDebug() << "item click";
+    TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
+    qDebug() << "item click " << item->getDbId() << item->data();
+    QSqlQuery qry;
+    qDebug() << "SELECT * FROM `product_category` WHERE `product_category_id`='"+QString("%1").arg(item->getDbId())+"';";
+    if (qry.exec("SELECT * FROM `product_category` WHERE `product_category_id`='"+QString("%1").arg(item->getDbId())+"';"))
+    {
+        qry.next();
+        titleLabel->setText(qry.value(4).toString());
+        qry.clear();
+        qry.exec("SELECT * FROM `product_category_description` WHERE `product_category_id`='"+QString("%1").arg(item->getDbId())+"';");
+        qry.next();
+        descrText->setText(qry.value(3).toString());
+    }
+    else
+    {
+        qDebug() << qry.lastError();
+    }
 }
 void MainController::setupDB()
 {
@@ -66,15 +81,17 @@ void MainController::setupDB()
         bool copySuccess = QFile::copy( QString("assets:/keaz.db"), databasePath );
         if ( !copySuccess )
         {
-            QMessageBox::critical(this, "Error:", QString("Could not copy database from 'assets' to %1").arg(databasePath));
-            databasePath.clear();
+            DownloadManager *d2=new DownloadManager();
+            d2->downList.append("http://skynet.meximas.com/keaz.db");
+            d2->saveList.append(databasePath);
+            MainController::connect(d2,SIGNAL(isDownload()),SLOT(conDB()));
+            QTimer::singleShot(0, d2, SLOT(execute()));
         }
         #else
         DownloadManager *d2=new DownloadManager();
         d2->downList.append("http://skynet.meximas.com/keaz.db");
         d2->saveList.append(databasePath);
         MainController::connect(d2,SIGNAL(isDownload()),SLOT(conDB()));
-        //connect(d2,SIGNAL(isDownload()),this,SLOT(conDB()));
         QTimer::singleShot(0, d2, SLOT(execute()));
         #endif
 }
@@ -89,4 +106,10 @@ void MainController::conDB()
 bool MainController::isConnectedDB()
 {
     return db.isOpen();
+}
+void MainController::setComponent(QLineEdit *searchText,QLabel *titleLabel,QTextEdit *descrText)
+{
+    this->searchText=searchText;
+    this->titleLabel=titleLabel;
+    this->descrText=descrText;
 }

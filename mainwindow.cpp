@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     createMenus();
+    setupMainController();
 }
 
 MainWindow::~MainWindow()
@@ -32,7 +33,6 @@ void MainWindow::createMenus()
 }
 void MainWindow::connectDB()
 {
-    mainC=new MainController();
     mainC->connectDB();
     if (mainC->isConnectedDB())
     {
@@ -46,6 +46,11 @@ void MainWindow::connectDB()
 void MainWindow::setupTreeModel()
 {
     ui->treeView->setModel(mainC->createTreeView());
-    connect(ui->treeView, SIGNAL(clicked(const QModelIndex  & index)), SLOT(TreeItemClick()));
+    connect(ui->treeView, SIGNAL(clicked(const QModelIndex  &)),mainC, SLOT(TreeItemClick(const QModelIndex  &)));
     ui->treeView->show();
+}
+void MainWindow::setupMainController()
+{
+    mainC=new MainController(this);
+    mainC->setComponent(ui->searchEdit,ui->titleLabel,ui->desrcText);
 }

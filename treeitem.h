@@ -9,13 +9,14 @@
 class TreeItem
 {
 public:
-    TreeItem(QString name, TreeItem *parent = 0);
+    TreeItem(int dbId, QString name, TreeItem *parent = 0);
     ~TreeItem();
     void appendChild(TreeItem *cont);
     TreeItem *child(int row);
     int childCount() const;
     int columnCount() const;
     QVariant data() const;
+    int getDbId() const;
     int row() const;
     TreeItem *parent();
     void setParent(TreeItem *parent);
@@ -23,6 +24,7 @@ private:
     QList<TreeItem*> childItems;
     QString name;
     TreeItem *parentItem;
+    int dbId;
 };
 
 #endif // TREEITEM_H

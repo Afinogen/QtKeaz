@@ -1,11 +1,11 @@
 #include "treeitem.h"
 
-TreeItem::TreeItem(QString nam, TreeItem *parent)
+TreeItem::TreeItem(int _dbId, QString nam, TreeItem *parent)
 {
     name = nam;
     parentItem = parent;
-
-    qDebug() << parentItem << name;
+    dbId = _dbId;
+    qDebug() << parentItem << dbId << name;
 }
 TreeItem::~TreeItem()
 {
@@ -33,7 +33,6 @@ int TreeItem::columnCount() const
 
 QVariant TreeItem::data() const
 {
-    //qDebug()<<"1: "<< name;
     return name;
 }
 
@@ -54,4 +53,8 @@ int TreeItem::row() const
 void TreeItem::setParent(TreeItem *parent)
 {
     parentItem = parent;
+}
+int TreeItem::getDbId() const
+{
+    return dbId;
 }

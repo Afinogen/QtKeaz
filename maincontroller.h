@@ -8,6 +8,9 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QStandardPaths>
+#include <QLineEdit>
+#include <QLabel>
+#include <QTextEdit>
 #include "treeitem.h"
 #include "treemodel.h"
 #include "downloadmanager.h"
@@ -23,6 +26,7 @@ public:
     bool isConnectedDB();
     void closeDB();
     TreeModel *createTreeView();
+    void setComponent(QLineEdit *searchText, QLabel *titleLabel, QTextEdit *descrText);
 public slots:
     void conDB();
 private:
@@ -30,8 +34,11 @@ private:
     void setupDB();
     QSqlDatabase db;
     QString databasePath;
+    QLineEdit *searchText;
+    QLabel *titleLabel;
+    QTextEdit *descrText;
 private slots:
-    void TreeItemClick();
+    void TreeItemClick(const QModelIndex &index);
 signals:
     void dbIsOk();
 };

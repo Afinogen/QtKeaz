@@ -2,7 +2,7 @@
 
 TreeModel::TreeModel(QObject *parent): QAbstractItemModel(parent)
 {
-    root = new TreeItem("Catalog");
+    root = new TreeItem(0,"Catalog");
 }
 TreeModel::~TreeModel()
 {
@@ -64,7 +64,6 @@ QVariant TreeModel::data(const QModelIndex &index, int role = Qt::DisplayRole) c
         return QVariant();
 
     TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
-//qDebug()<<item->data();
     return item->data();
 }
 void TreeModel::addItem(TreeItem *item)

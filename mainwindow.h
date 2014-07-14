@@ -16,6 +16,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     void createMenus();
+    void setupMainController();
 private:
     Ui::MainWindow *ui;
     MainController *mainC;
