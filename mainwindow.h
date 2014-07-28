@@ -23,6 +23,7 @@ private:
 private slots:
     void connectDB();
     void setupTreeModel();
+    void on_searchEdit_textChanged(const QString &arg1);
 };
 
 #endif // MAINWINDOW_H

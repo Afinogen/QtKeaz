@@ -5,7 +5,7 @@ TreeItem::TreeItem(int _dbId, QString nam, TreeItem *parent)
     name = nam;
     parentItem = parent;
     dbId = _dbId;
-    qDebug() << parentItem << dbId << name;
+    //qDebug() << parentItem << dbId << name;
 }
 TreeItem::~TreeItem()
 {
@@ -43,7 +43,7 @@ TreeItem* TreeItem::parent()
 
 int TreeItem::row() const
 {
-    qDebug() << parentItem;
+    //qDebug() << parentItem;
     if(parentItem)
     {
         return parentItem->childItems.indexOf(const_cast<TreeItem*>(this));

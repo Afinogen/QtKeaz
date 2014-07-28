@@ -52,5 +52,11 @@ void MainWindow::setupTreeModel()
 void MainWindow::setupMainController()
 {
     mainC=new MainController(this);
-    mainC->setComponent(ui->searchEdit,ui->titleLabel,ui->desrcText);
+    mainC->setComponent(ui->searchEdit,ui->titleLabel,ui->desrcText, ui->tableView,ui->scrollArea);
+    connectDB();
+}
+
+void MainWindow::on_searchEdit_textChanged(const QString &arg1)
+{
+    if (!arg1.isEmpty()) mainC->setupTableSearchString(arg1);
 }
