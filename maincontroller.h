@@ -14,6 +14,9 @@
 #include <QTableView>
 #include <QHeaderView>
 #include <QScrollArea>
+#include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
 #include "treeitem.h"
 #include "treemodel.h"
 #include "downloadmanager.h"
@@ -32,7 +35,7 @@ public:
     bool isConnectedDB();
     void closeDB();
     TreeModel *createTreeView();
-    void setComponent(QLineEdit *searchText, QLabel *titleLabel, QTextEdit *descrText, QTableView *tableImg, QScrollArea *scrollArea);
+    void setComponent(QLineEdit *searchText, QLabel *titleLabel, QTextEdit *descrText, QTableView *tableImg, QScrollArea *scrollArea, QGraphicsView *graphicsView, QStatusBar *bar);
     void setupTableSearchString(QString search);
 public slots:
     void conDB();
@@ -41,6 +44,8 @@ private:
     void setupDB();
     void setupTableModelImg(int parentId);
     void setupTableModelString(int parentId);
+    void setVisibleSearch(bool visible);
+    void setVisibleItem(bool visible);
     QSqlDatabase db;
     QString databasePath;
     QLineEdit *searchText;
@@ -52,6 +57,9 @@ private:
     TableModel *modelImg;
     TableModelString *modelString;
     QScrollArea *scrollArea;
+    QGraphicsView *graphicsView;
+    QGraphicsPixmapItem *pixmapDescr;
+    QStatusBar *bar;
 private slots:
     void TreeItemClick(const QModelIndex &index);
     void TableImgItemClick(const QModelIndex  &index);

@@ -43,7 +43,7 @@ void MainController::createTreeItem(TreeItem *parentItem, int parentId)
 {
     QSqlQuery qry;
     qDebug() << "SELECT * FROM `product_category` WHERE `parent_id`='"+QString("%1").arg(parentId)+"';";
-    if (qry.exec("SELECT * FROM `product_category` WHERE `parent_id`='"+QString("%1").arg(parentId)+"';"))
+    if (qry.exec("SELECT * FROM `product_category` WHERE `parent_id`='"+QString("%1").arg(parentId)+"'  AND `is_deleted`='0';"))
     {
         // если запрос выполнен, то запускаем цикл перехода по каждой
         // строке
@@ -61,6 +61,8 @@ void MainController::createTreeItem(TreeItem *parentItem, int parentId)
 }
 void MainController::TreeItemClick(const QModelIndex  &index)
 {
+    setVisibleItem(false);
+    setVisibleSearch(true);
     TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
     qDebug() << "item click " << item->getDbId() << item->data();
     QSqlQuery qry;
@@ -69,8 +71,14 @@ void MainController::TreeItemClick(const QModelIndex  &index)
     {
         qry.next();
         titleLabel->setText(qry.value(4).toString());
-        if (qry.value(1).toInt()==1) setupTableModelImg(item->getDbId());
-        else setupTableModelString(item->getDbId());
+        if (qry.value(1).toInt()==1) {
+            setupTableModelImg(item->getDbId());
+            this->graphicsView->setVisible(false);
+        }
+        else {
+            setupTableModelString(item->getDbId());
+            this->graphicsView->setVisible(true);
+        }
         qry.clear();
         qry.exec("SELECT * FROM `product_category_description` WHERE `product_category_id`='"+QString("%1").arg(item->getDbId())+"';");
         qry.next();
@@ -95,7 +103,8 @@ void MainController::setupDB()
             QTimer::singleShot(0, d2, SLOT(execute()));
         }
         #else
-        DownloadManager *d2=new DownloadManager();
+        DownloadManager *d2=new DownloadManager(this);
+        d2->setStatusBar(bar);
         d2->downList.append("http://test.keaz.ru/keaz.db");
         d2->saveList.append(databasePath);
         MainController::connect(d2,SIGNAL(isDownload()),SLOT(conDB()));
@@ -114,14 +123,20 @@ bool MainController::isConnectedDB()
 {
     return db.isOpen();
 }
-void MainController::setComponent(QLineEdit *searchText, QLabel *titleLabel, QTextEdit *descrText, QTableView *tableImg, QScrollArea *scrollArea)
+void MainController::setComponent(QLineEdit *searchText, QLabel *titleLabel, QTextEdit *descrText, QTableView *tableImg, QScrollArea *scrollArea, QGraphicsView *graphicsView, QStatusBar *bar)
 {
     this->searchText=searchText;
     this->titleLabel=titleLabel;
     this->descrText=descrText;
     this->tableImg=tableImg;
     this->scrollArea=scrollArea;
+    this->graphicsView=graphicsView;
     this->defultDelegate=this->tableImg->itemDelegate();
+    this->titleLabel->setText("");
+    this->graphicsView->setScene(new QGraphicsScene(this));
+    //this->pixmapDescr = this->graphicsView->scene()->addPixmap(QPixmap(QSize(300,300)));
+    this->graphicsView->setVisible(false);
+    this->bar=bar;
 }
 void MainController::setupTableModelImg(int parentId)
 {
@@ -145,6 +160,7 @@ void MainController::setupTableModelImg(int parentId)
         this->tableImg->horizontalHeader()->setVisible(false);
         disconnect(this->tableImg,SIGNAL(clicked(const QModelIndex  &)),this,NULL);
         connect(this->tableImg, SIGNAL(clicked(const QModelIndex  &)),this, SLOT(TableImgItemClick(const QModelIndex  &)));
+        this->descrText->setMaximumHeight(200);
         //this->scrollArea   ->setGeometry(0,0,this->scrollArea->width(),this->tableImg->height()+1000);
     }
     else qDebug()<<qry.lastError();
@@ -175,21 +191,46 @@ void MainController::setupTableModelString(int parentId)
             this->tableImg->setRowHeight(i,40);
         disconnect(this->tableImg,SIGNAL(clicked(const QModelIndex  &)),this,NULL);
         connect(this->tableImg, SIGNAL(clicked(const QModelIndex  &)),this, SLOT(TableStringItemClick(const QModelIndex  &)));
+        this->descrText->setMaximumHeight(400);
     }
     else qDebug()<<qry.lastError();
 }
 void MainController::TableImgItemClick(const QModelIndex &index)
 {
+    setVisibleItem(false);
+    setVisibleSearch(true);
     TableItem *item = this->modelImg->getItem(this->tableImg->model()->columnCount()*index.row()+index.column());
     qDebug()<<item->title;
+    QSqlQuery qry;
+    //qDebug() << "SELECT * FROM `product_category` WHERE `product_category_id`='"+QString("%1").arg(item->getDbId())+"';";
+    if (qry.exec("SELECT * FROM `product_category` WHERE `product_category_id`='"+QString("%1").arg(item->id)+"';"))
+    {
+        qry.next();
+        titleLabel->setText(qry.value(4).toString());
+        this->setupTableModelString(item->id);
+        this->graphicsView->setVisible(true);
+
+        this->graphicsView->scene()->addPixmap(QPixmap(item->file));
+
+        qry.clear();
+        qry.exec("SELECT * FROM `product_category_description` WHERE `product_category_id`='"+QString("%1").arg(item->id)+"';");
+        qry.next();
+        descrText->setText(qry.value(3).toString());
+    }
+    else
+    {
+        qDebug() << qry.lastError();
+    }
     this->setupTableModelString(item->id);
 }
 void MainController::TableStringItemClick(const QModelIndex &index)
 {
-
+    setVisibleItem(true);
 }
 void MainController::setupTableSearchString(QString search)
 {
+    setVisibleItem(false);
+    setVisibleSearch(false);
     TableModelString *model = new TableModelString();
 
     QSqlQuery qry;
@@ -199,6 +240,7 @@ void MainController::setupTableSearchString(QString search)
             qDebug()<<qry.value(5).toString();
             model->addItem(qry.value(5).toString(),qry.value(0).toString());
         }
+        this->titleLabel->setText("Найдено "+QString("%1").arg(model->rowCount()) +" наименований");
 
         this->tableImg->horizontalHeader()->setVisible(true);
         this->tableImg->setColumnWidth(0,500);
@@ -212,4 +254,23 @@ void MainController::setupTableSearchString(QString search)
         connect(this->tableImg, SIGNAL(clicked(const QModelIndex  &)),this, SLOT(TableStringItemClick(const QModelIndex  &)));
     }
     else qDebug()<<qry.lastError();
+}
+void MainController::setVisibleSearch(bool visible)
+{
+    this->descrText->setVisible(visible);
+    this->graphicsView->setVisible(visible);
+    //this->titleLabel->setVisible(visible);
+}
+void MainController::setVisibleItem(bool visible)
+{
+    this->descrText->setVisible(visible);
+    this->tableImg->setVisible(!visible);
+    if (visible)
+    {
+        this->descrText->setMaximumHeight(16777215);
+    }
+    else
+    {
+        this->descrText->setMaximumHeight(200);
+    }
 }

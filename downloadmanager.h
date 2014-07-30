@@ -11,6 +11,8 @@
 #include <QStringList>
 #include <QTimer>
 #include <QUrl>
+#include <QStatusBar>
+#include <QLabel>
 
 #include <stdio.h>
 
@@ -28,11 +30,14 @@ class DownloadManager: public QObject
 
 public:
     DownloadManager(QObject *parent=0);
+    void setStatusBar(QStatusBar *bar);
     void doDownload(const QUrl &url);
     QString saveFileName(const QUrl &url);
     bool saveToDisk(const QString &filename, QIODevice *data);
     QList<QString> downList;
     QList<QString> saveList;
+private:
+    QStatusBar *bar;
 public slots:
     void execute();
     void downloadFinished(QNetworkReply *reply);

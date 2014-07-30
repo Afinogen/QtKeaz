@@ -77,14 +77,24 @@ void DownloadManager::downloadFinished(QNetworkReply *reply)
 {
     QUrl url = reply->url();
     if (reply->error()) {
-        qDebug() << "Download of " << url.toEncoded().constData() << " failed: " << reply->errorString();
+        QString save("Download of " + QString(url.toEncoded().constData()) + " failed: " + reply->errorString());
+        bar->showMessage(save,10000);
+        qDebug() << save;
     } else {
         QString filename = saveFileName(url);
         if (saveToDisk(saveList[0], reply))
-           qDebug()<<"Download of "<<url.toEncoded().constData()<<" succeeded (saved to "<<filename<<")";
+        {
+           QString save("Download of "+QString(url.toEncoded().constData())+" succeeded (saved to "+filename+")");
+           bar->showMessage(save,10000);
+           qDebug()<<save;
+        }
         isDownload();
     }
 
     currentDownloads.removeAll(reply);
     reply->deleteLater();
+}
+void DownloadManager::setStatusBar(QStatusBar *bar)
+{
+    this->bar = bar;
 }
