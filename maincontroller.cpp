@@ -5,17 +5,22 @@ MainController::MainController(QObject *parent):QObject(parent)
     delegateForImg=new TableImgDelegate();
     modelImg=new TableModel();
     modelString=new TableModelString();
+    QString tmpString = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    QFileInfo path(QString("%1/%2").arg(tmpString).arg("KEAZ/files"));
+    QDir dir;
+    dir.mkpath(path.absoluteFilePath());
 }
 MainController::~MainController()
 {
     delete delegateForImg;
     delete modelImg;
     delete modelString;
+    closeDB();
 }
 void MainController::connectDB()
 {
     QString tmpString = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-    QFileInfo databaseFileInfo(QString("%1/%2").arg(tmpString).arg("keaz.db"));
+    QFileInfo databaseFileInfo(QString("%1/%2").arg(tmpString).arg("KEAZ/keaz.db"));
     databasePath = databaseFileInfo.absoluteFilePath();
     qDebug() << "databasePath: "+databasePath;  // to display full name with path of databas
     if (!databaseFileInfo.exists()) setupDB();
@@ -145,13 +150,33 @@ void MainController::setupTableModelImg(int parentId)
     this->modelImg=model;
     //modelImg->clearModel();
     QSqlQuery qry;
-    qDebug()<<"SELECT * FROM `product_category` WHERE `parent_id`='"+QString("%1").arg(parentId)+"';";
-    if (qry.exec("SELECT * FROM `product_category` WHERE `parent_id`='"+QString("%1").arg(parentId)+"';"))
+    //qDebug()<<"SELECT * FROM `product_category` WHERE `parent_id`='"+QString("%1").arg(parentId)+"';";
+    qDebug()<<"SELECT `product_category`.*, `file`.`file_id`, `file`.`file_path`,`file`.`file_ext`,`file`.`filename` FROM `product_category`, `file` WHERE `file`.`file_id`=`product_category`.`file_id` AND `parent_id`='"+QString("%1").arg(parentId)+"';";
+    if (qry.exec("SELECT `product_category`.*, `file`.`file_id`, `file`.`file_path`,`file`.`file_ext`,`file`.`filename` FROM `product_category`, `file` WHERE `file`.`file_id`=`product_category`.`file_id` AND `parent_id`='"+QString("%1").arg(parentId)+"';"))
     {
+        QString path = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+
         while (qry.next()) {
-            qDebug()<<qry.value(4).toString();
-            model->addItem(qry.value(0).toInt(), qry.value(4).toString(),"/home/afinogen/qt_project/build-QtKeaz-Desktop_Qt_5_3_GCC_64bit-Debug/vm63-2-bcd-1.png");
+            QDir dir;
+            DownloadManager *d2=new DownloadManager(this);
+            d2->setStatusBar(bar);
+            QFileInfo fileInfo(QString("%1/KEAZ/files/%2/%3.%4").arg(path).arg(qry.value(8).toString()).arg(qry.value(6).toString()).arg(qry.value(9).toString()));
+            dir.mkpath(fileInfo.absolutePath());
+           // qDebug()<<qry.value(4).toString()<<" "<<" "<<qry.value(5).toString()<<qry.value(6).toString()<<" "<<qry.value(7).toString()<<" "<<qry.value(8).toString()<<" "<<qry.value(9).toString();
+           // qDebug()<<fileInfo.absoluteFilePath();
+            if (fileInfo.exists()) {
+                model->addItem(qry.value(0).toInt(), qry.value(4).toString(),fileInfo.absoluteFilePath());
+            } else {
+                d2->downList.append("http://keaz.ru/f/"+qry.value(6).toString()+"/"+qry.value(10).toString());
+                d2->saveList.append(fileInfo.absoluteFilePath());
+                //MainController::connect(d2,SIGNAL(isDownload()),SLOT(conDB()));
+                model->addItem(qry.value(0).toInt(), qry.value(4).toString(),"/home/afinogen/qt_project/build-QtKeaz-Desktop_Qt_5_3_GCC_64bit-Debug/vm63-2-bcd-1.png");
+            }
+            if (d2->downList.size()>0) {
+                QTimer::singleShot(0, d2, SLOT(execute()));
+            }
         }
+
         this->tableImg->setModel(model);
         tableImg->setItemDelegate(delegateForImg);
         this->tableImg->setColumnWidth(0,300);

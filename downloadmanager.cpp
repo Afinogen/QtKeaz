@@ -59,8 +59,11 @@ void DownloadManager::execute()
         QUrl url = QUrl::fromEncoded(arg.toLocal8Bit());
         doDownload(url);
     }*/
-    QUrl url =downList[0];
-    doDownload(url);
+    for(int i=0;i<downList.size();i++)
+    {
+        QUrl url =downList[i];
+        doDownload(url);
+    }
 }
 
 void DownloadManager::sslErrors(const QList<QSslError> &sslErrors)
@@ -81,7 +84,9 @@ void DownloadManager::downloadFinished(QNetworkReply *reply)
         bar->showMessage(save,10000);
         qDebug() << save;
     } else {
-        QString filename = saveFileName(url);
+        QString filename;// = saveFileName(url);
+        int id = getIdDownFile(url.toString());
+        if (id!=-1) filename = saveList[id];
         if (saveToDisk(saveList[0], reply))
         {
            QString save("Download of "+QString(url.toEncoded().constData())+" succeeded (saved to "+filename+")");
@@ -97,4 +102,10 @@ void DownloadManager::downloadFinished(QNetworkReply *reply)
 void DownloadManager::setStatusBar(QStatusBar *bar)
 {
     this->bar = bar;
+}
+int DownloadManager::getIdDownFile(QString file) const
+{
+    for(int i=0;i<downList.size();i++)
+        if (downList[i].compare(file)==0) return i;
+    return -1;
 }

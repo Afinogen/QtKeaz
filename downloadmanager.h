@@ -38,6 +38,7 @@ public:
     QList<QString> saveList;
 private:
     QStatusBar *bar;
+    int getIdDownFile(QString file) const;
 public slots:
     void execute();
     void downloadFinished(QNetworkReply *reply);

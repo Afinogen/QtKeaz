@@ -17,6 +17,7 @@
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
+#include <QDir>
 #include "treeitem.h"
 #include "treemodel.h"
 #include "downloadmanager.h"
